@@ -19,7 +19,7 @@ public abstract class BankAccount {
 		this.balance = 0.0;
 	}
 
-	public abstract void deposit(Double amount);
+	public abstract void deposit(double amount);
 
 	public abstract void withdraw(double amount);
 

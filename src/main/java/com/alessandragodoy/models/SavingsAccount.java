@@ -15,7 +15,7 @@ public class SavingsAccount extends BankAccount {
 	}
 
 	@Override
-	public void deposit(Double amount) {
+	public void deposit(double amount) {
 		balance += amount;
 		System.out.println("\nDeposit successful. New balance: $" + getBalance());
 	}
