@@ -1,35 +1,43 @@
 package com.alessandragodoy.models;
 
-public class BankAccount {
-	private final String accountNumber;	// Unique, auto-generated
-	protected Double balance;
-	private final AccountType accountType;	// Checking or Savings
+/**
+ * Represents an abstract bank account with core attributes and operations. This serves as a base
+ * class for specific account types like checking and savings accounts.
+ * <p>
+ * Each account has a unique account number, a defined account type (Checking or Savings), and a balance.
+ * Subclasses are expected to implement specific behaviors for deposit and withdrawal operations.
+ * </p>
+ */
+public abstract class BankAccount {
+	private final String accountNumber;    // Unique, auto-generated
+	private final AccountType accountType;    // Checking or Savings
+	protected double balance;
 
 	public BankAccount(String accountNumber, AccountType accountType) {
 		this.accountNumber = accountNumber;
-		this.balance = 0.0;
 		this.accountType = accountType;
+		this.balance = 0.0;
 	}
 
-	public void deposit(Double amount) {
-		this.balance += amount;
-		System.out.println("Deposit successful");
-	}
+	public abstract void deposit(Double amount);
 
-	public void withdraw(Double amount) {
-		this.balance -= amount;
-	}
+	public abstract void withdraw(double amount);
 
-	public Double getBalance() {
-		return this.balance;
+	@Override
+	public String toString() {
+		return "\n---Bank Account Details---\nAccount Number: " + getAccountNumber() + "\nBalance: $" + getBalance() +
+				"\nAccount Type: " + getAccountType();
 	}
 
 	public String getAccountNumber() {
 		return accountNumber;
 	}
 
+	public double getBalance() {
+		return this.balance;
+	}
+
 	public AccountType getAccountType() {
 		return accountType;
 	}
-
 }
