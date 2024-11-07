@@ -1,4 +1,4 @@
-package com.alessandragodoy.models;
+package com.alessandragodoy.model;
 
 /**
  * Represents an abstract bank account with core attributes and operations. This serves as a base
@@ -9,8 +9,9 @@ package com.alessandragodoy.models;
  * </p>
  */
 public abstract class BankAccount {
-	private final String accountNumber;    // Unique, auto-generated
-	private final AccountType accountType;    // Checking or Savings
+
+	private final String accountNumber;
+	private final AccountType accountType;
 	protected double balance;
 
 	public BankAccount(String accountNumber, AccountType accountType) {
@@ -25,8 +26,7 @@ public abstract class BankAccount {
 
 	@Override
 	public String toString() {
-		return "\n---Bank Account Details---\nAccount Number: " + getAccountNumber() + "\nBalance: $" + getBalance() +
-				"\nAccount Type: " + getAccountType();
+		return "\n---Bank Account Details---\nAccount Number: " + getAccountNumber() + "\nBalance: $" + getBalance() + "\nAccount Type: " + getAccountType();
 	}
 
 	public String getAccountNumber() {
@@ -40,4 +40,9 @@ public abstract class BankAccount {
 	public AccountType getAccountType() {
 		return accountType;
 	}
+
+	public void setBalance(double balance) {
+		this.balance = balance;
+	}
+
 }
