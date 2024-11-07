@@ -1,40 +1,116 @@
 package com.alessandragodoy;
 
-import com.alessandragodoy.models.AccountType;
-import com.alessandragodoy.models.BankAccount;
-import com.alessandragodoy.services.BankService;
+import com.alessandragodoy.model.AccountType;
+import com.alessandragodoy.service.BankService;
+
+import java.util.Scanner;
 
 /**
- * A test driver for the banking system. This class demonstrates various operations
- * such as client registration, account creation, deposits, withdrawals, and balance checks.
- *
- * <p>This class serves as the main entry point for testing the {@link BankService}
- * functionality. Each operation is performed with sample data to verify the behavior
- * of the banking system, including error handling for overdraft and insufficient funds.</p>
+ * The SystemDriver class is the entry point for the banking system application.
+ * It provides a command-line interface for users to interact with the system.
  */
 public class SystemDriver {
-	public static void main(String[] args) throws Exception {
-		BankService bankService = new BankService();
+	private static final BankService bankService = new BankService();
+	private static final Scanner scanner = new Scanner(System.in);
+	public static void main(String[] args) {
+		boolean exit = false;
+		while(!exit) {
+			System.out.println("\n***Bienvenido al Sistema Bancario***");
+			System.out.println("1. Registrar cliente");
+			System.out.println("2. Abrir cuenta bancaria");
+			System.out.println("3. Depositar");
+			System.out.println("4. Retirar");
+			System.out.println("5. Consultar balance");
+			System.out.println("6. Salir");
+			System.out.println("Selecciona una opción:");
 
-		// Register a new client
-		bankService.registerClient("Alessandra", "Godoy", "12345678", "agodoy@mail.com");
+			int option = scanner.nextInt();
+			scanner.nextLine();
 
-		// Uncomment to test handling of null values (will throw an exception)
-		// bankService.registerClient("John", "Doe", null, null);
+			switch (option) {
+				case 1 -> registerClient();
+				case 2 -> openBankAccount();
+				case 3 -> deposit();
+				case 4 -> withdraw();
+				case 5 -> checkBalance();
+				case 6 -> {
+					System.out.println("***Gracias por usar el sistema bancario***");
+					exit = true;
+				}
+				default -> System.out.println("Opción no válida. Intente de nuevo.");
+			}
+		}
+	}
 
-		// Open checking and savings accounts for the registered client
-		BankAccount account1 = bankService.openAccount("12345678", AccountType.CHECKING);
-		BankAccount account2 = bankService.openAccount("12345678", AccountType.SAVINGS);
+	private static void registerClient() {
+		System.out.print("Ingrese el nombre: ");
+		String firstName = scanner.nextLine();
+		System.out.print("Ingrese el apellido: ");
+		String lastName = scanner.nextLine();
+		System.out.print("Ingrese el DNI (8 dígitos): ");
+		String dni = scanner.nextLine();
+		System.out.print("Ingrese el email: ");
+		String email = scanner.nextLine();
 
-		// Perform deposit and withdrawal operations
-		bankService.deposit(account2.getAccountNumber(), 200); // ok
-		bankService.withdraw(account1.getAccountNumber(), 500); // ok
-		bankService.withdraw(account2.getAccountNumber(), 200); // ok
-		bankService.withdraw(account1.getAccountNumber(), 1000); // error
-		bankService.withdraw(account2.getAccountNumber(), 1000); // error
+		try {
+			bankService.registerClient(firstName, lastName, dni, email);
+		} catch (IllegalArgumentException e) {
+			System.out.println("\nError: " + e.getMessage());
+		}
+	}
 
-		// Check balances of both accounts
-		bankService.checkBalance(account1.getAccountNumber());
-		bankService.checkBalance(account2.getAccountNumber());
+	private static void openBankAccount() {
+		System.out.print("Ingrese el DNI del cliente: ");
+		String dni = scanner.nextLine();
+		System.out.print("Seleccione el tipo de cuenta (1: Ahorros, 2: Corriente): ");
+		int accountTypeChoice = scanner.nextInt();
+		scanner.nextLine();
+
+		AccountType accountType = (accountTypeChoice == 1) ? AccountType.SAVINGS : AccountType.CHECKING;
+
+		try {
+			bankService.openAccount(dni, accountType);
+		} catch (RuntimeException e) {
+			System.out.println("Error: " + e.getMessage());
+		}
+	}
+
+	private static void deposit() {
+		System.out.print("Ingrese el número de cuenta: ");
+		String accountNumber = scanner.nextLine();
+		System.out.print("Ingrese el monto a depositar: ");
+		double amount = scanner.nextDouble();
+		scanner.nextLine();
+
+		try {
+			bankService.deposit(accountNumber, amount);
+		} catch ( RuntimeException e) {
+			System.out.println("Error: " + e.getMessage());
+		}
+	}
+
+	private static void withdraw() {
+		System.out.print("Ingrese el número de cuenta: ");
+		String accountNumber = scanner.nextLine();
+		System.out.print("Ingrese el monto a retirar: ");
+		double amount = scanner.nextDouble();
+		scanner.nextLine();
+
+		try {
+			bankService.withdraw(accountNumber, amount);
+		} catch (RuntimeException e) {
+			System.out.println("Error: " + e.getMessage());
+		}
+	}
+
+	private static void checkBalance() {
+		System.out.print("Ingrese el número de cuenta: ");
+		String accountNumber = scanner.nextLine();
+
+		try {
+			bankService.checkBalance(accountNumber);
+		} catch (RuntimeException e) {
+			System.out.println("Error: " + e.getMessage());
+		}
 	}
 }

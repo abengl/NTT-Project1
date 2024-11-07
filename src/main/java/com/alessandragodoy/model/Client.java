@@ -1,4 +1,4 @@
-package com.alessandragodoy.models;
+package com.alessandragodoy.model;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,15 @@ public class Client {
 	private final String dni;    // Required, unique
 	private final String email;    // Required, format validation
 	private final List<BankAccount> accounts;
-	private final int idClient;    // Unique, auto-generated
+	private int idClient;    // Unique, auto-generated
+
+	public Client(String firstname, String lastName, String dni, String email) {
+		this.firstname = firstname;
+		this.lastName = lastName;
+		this.dni = dni;
+		this.email = email;
+		accounts = new ArrayList<>();
+	}
 
 	public Client(int idClient, String firstname, String lastName, String dni, String email) {
 		this.idClient = idClient;
@@ -58,5 +66,9 @@ public class Client {
 
 	public String getEmail() {
 		return email;
+	}
+
+	public void setIdClient(int idClient) {
+		this.idClient = idClient;
 	}
 }

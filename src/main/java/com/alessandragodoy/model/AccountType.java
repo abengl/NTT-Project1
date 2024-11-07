@@ -1,4 +1,4 @@
-package com.alessandragodoy.models;
+package com.alessandragodoy.model;
 
 /**
  * Enum representing the types of bank accounts.
