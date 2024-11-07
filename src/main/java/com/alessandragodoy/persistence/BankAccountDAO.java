@@ -122,7 +122,6 @@ public class BankAccountDAO {
 
 			if (resultSet.next()) {
 				double balance = resultSet.getDouble("balance");
-				System.out.println("\nBalance for account " + accountNumber + ": $" + balance);
 				return balance;
 			}
 		} catch (SQLException e) {

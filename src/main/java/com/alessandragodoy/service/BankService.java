@@ -34,24 +34,24 @@ public class BankService {
 	 * @throws IllegalArgumentException if any field is null, the DNI or email are invalid, or the DNI already exists
 	 */
 	public void registerClient(String firstname, String lastName, String dni, String email) {
-		if (firstname == null || lastName == null || dni == null || email == null) {
-			throw new IllegalArgumentException("All fields are required.");
+		if (firstname.isEmpty() || lastName.isEmpty() || dni.isEmpty() || email.isEmpty()) {
+			throw new IllegalArgumentException("Todos los campos son necesarios.");
 		}
 		if (!isDniValid.test(dni)) {
-			throw new IllegalArgumentException("Invalid DNI format. Please, verify the DNI format includes 8 digits.");
+			throw new IllegalArgumentException("Formato de DNI inválido. Debe contener exactamente 8 dígitos.");
 		}
 		if (!isEmailValid.test(email)) {
 			throw new IllegalArgumentException(
-					"Invalid email format. Please, verify the email format includes valid " + "characters.");
+					"Formato de email inválido. Debe contener un solo '@' y al menos un '.' después del '@'.");
 		}
 		if (clientDAO.findClientByDni(dni) != null) {
-			throw new IllegalArgumentException("DNI already exists. User can't be registered.");
+			throw new IllegalArgumentException("DNI ya registrado. Intente con otro.");
 		}
 
 		Client client = new Client(firstname, lastName, dni, email);
 		clientDAO.saveClient(client);
 
-		System.out.println("\nClient registered successfully.");
+		System.out.println("\nCliente registrado con éxito.");
 		System.out.println(client);
 	}
 
@@ -64,9 +64,13 @@ public class BankService {
 	 * @return the newly created bank account
 	 */
 	public BankAccount openAccount(String dni, AccountType accountType) {
+		if (dni.isEmpty() || accountType == null) {
+			throw new IllegalArgumentException("Datos incompletos. Por favor, intente de nuevo.");
+		}
+
 		Client client = clientDAO.findClientByDni(dni);
 		if (client == null) {
-			throw new RuntimeException("Client not found.");
+			throw new RuntimeException("Cliente no encontrado.");
 		}
 
 		String accountNumber = generateAccountNumber();
@@ -78,7 +82,7 @@ public class BankService {
 		bankAccountDAO.saveAccount(account, client.getIdClient());
 		client.addAccount(account);
 
-		System.out.println("\nAccount opened successfully. Account number: " + account.getAccountNumber());
+		System.out.println("\nCuenta creada con éxito. Número de cuenta " + account.getAccountNumber());
 		return account;
 	}
 
@@ -100,18 +104,17 @@ public class BankService {
 	 */
 	public void deposit(String accountNumber, double amount) {
 		if (amount <= 0) {
-			throw new IllegalArgumentException("Deposit amount must be greater than 0.");
+			throw new IllegalArgumentException("El monton a depositar debe ser mayor a 0.");
 		}
 		BankAccount account = bankAccountDAO.findAccount(accountNumber);
 		if (account == null) {
-			throw new RuntimeException("Account not found.");
+			throw new RuntimeException("Cuenta no encontrada.");
 		}
 
 		bankAccountDAO.updateBalance(account);
-		System.out.print("\nOperation to deposit started... ");
 		bankAccountDAO.deposit(accountNumber, amount);
 		account.deposit(amount);
-		System.out.println("\nDeposit successful. New balance: $" + account.getBalance());
+		System.out.println("\nDepósito exitoso. Nuevo balance: $" + account.getBalance());
 	}
 
 
@@ -124,25 +127,23 @@ public class BankService {
 	 */
 	public void withdraw(String accountNumber, double amount) {
 		if (amount <= 0) {
-			throw new IllegalArgumentException("Withdraw amount must be greater than 0.");
+			throw new IllegalArgumentException("Monto a retirar debe ser mayor a 0.");
 		}
 		BankAccount account = bankAccountDAO.findAccount(accountNumber);
 		if (account == null) {
-			throw new RuntimeException("Account not found.");
+			throw new RuntimeException("Cuenta no encontrada.");
 		}
 		bankAccountDAO.updateBalance(account);
 		if (account.getAccountType() == AccountType.SAVINGS && (account.getBalance() - amount >= 0)) {
-			System.out.print("\nOperation to withdraw started... ");
 			bankAccountDAO.withdraw(accountNumber, amount);
 			account.withdraw(amount);
-			System.out.println("\nWithdraw successful. New balance: $" + account.getBalance());
+			System.out.println("\nRetiro exitoso. Nuevo balance: $" + account.getBalance());
 		} else if (account.getAccountType() == AccountType.CHECKING && (account.getBalance() - amount >= -500)) {
-			System.out.print("\nOperation to withdraw started... ");
 			bankAccountDAO.withdraw(accountNumber, amount);
 			account.withdraw(amount);
-			System.out.println("\nWithdraw successful. New balance: $" + account.getBalance());
+			System.out.println("\nRetiro exitoso. Nuevo balance: $" + account.getBalance());
 		} else {
-			throw new RuntimeException("\nAccount limit exceeded. Operation cancelled.");
+			throw new RuntimeException("\nLímte de retiro excedido. Operaion no permitida.");
 		}
 	}
 
@@ -154,10 +155,11 @@ public class BankService {
 	public double checkBalance(String accountNumber) {
 		BankAccount account = bankAccountDAO.findAccount(accountNumber);
 		if (account == null) {
-			throw new RuntimeException("Account not found.");
+			throw new RuntimeException("Cuenta no encontrada.");
 		}
 
 		double balance = bankAccountDAO.checkBalance(accountNumber);
+		System.out.println("\nBalance actual de la cuenta " + accountNumber + ": $" + balance);
 		return balance;
 	}
 }
