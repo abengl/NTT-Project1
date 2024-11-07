@@ -1,9 +1,9 @@
-package com.alessandragodoy.services;
+package com.alessandragodoy.service;
 
-import com.alessandragodoy.models.*;
+import com.alessandragodoy.model.*;
+import com.alessandragodoy.persistence.BankAccountDAO;
+import com.alessandragodoy.persistence.ClientDAO;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Predicate;
 
 /**
@@ -15,19 +15,13 @@ import java.util.function.Predicate;
  */
 public class BankService {
 
-	/**
-	 * Stores clients by their unique DNI for quick access.
-	 */
-	private final Map<String, Client> clients = new HashMap<>();
+	private final ClientDAO clientDAO = new ClientDAO();
+	private final BankAccountDAO bankAccountDAO = new BankAccountDAO();
 
-	/**
-	 * Validates email format using a regular expression.
-	 */
+	// Validates email format using a regular expression.
 	private final Predicate<String> isEmailValid = email -> email.matches("^[A-Za-z0-9_.-]+@[A-Za-z0-9.-]+$");
 
-	/**
-	 * Validates DNI format, expecting exactly 8 digits.
-	 */
+	// Validates DNI format, expecting exactly 8 digits.
 	private final Predicate<String> isDniValid = dni -> dni.matches("[0-9]{8}");
 
 	/**
@@ -50,25 +44,17 @@ public class BankService {
 			throw new IllegalArgumentException(
 					"Invalid email format. Please, verify the email format includes valid " + "characters.");
 		}
-		if (clients.containsKey(dni)) {
+		if (clientDAO.findClientByDni(dni) != null) {
 			throw new IllegalArgumentException("DNI already exists. User can't be registered.");
 		}
-		int idClient = generateClientId();
-		Client client = new Client(idClient, firstname, lastName, dni, email);
-		clients.put(dni, client);
+
+		Client client = new Client(firstname, lastName, dni, email);
+		clientDAO.saveClient(client);
+
 		System.out.println("\nClient registered successfully.");
 		System.out.println(client);
 	}
 
-	/**
-	 * Generates a unique ID for each client. This is an auto-incremented value based on
-	 * the current size of the clients map.
-	 *
-	 * @return a unique integer client ID
-	 */
-	private int generateClientId() {
-		return clients.size() + 1;
-	}
 
 	/**
 	 * Opens a new bank account for a specified client.
@@ -76,34 +62,33 @@ public class BankService {
 	 * @param dni         the DNI of the client for whom the account is to be opened
 	 * @param accountType the type of account to open, either CHECKING or SAVINGS
 	 * @return the newly created bank account
-	 * @throws Exception if the client is not found
 	 */
-	public BankAccount openAccount(String dni, AccountType accountType) throws Exception {
-		Client client = clients.get(dni);
+	public BankAccount openAccount(String dni, AccountType accountType) {
+		Client client = clientDAO.findClientByDni(dni);
 		if (client == null) {
-			throw new Exception("Client not found.");
+			throw new RuntimeException("Client not found.");
 		}
 
 		String accountNumber = generateAccountNumber();
-		BankAccount account;
-		if (accountType == AccountType.SAVINGS) {
-			account = new SavingsAccount(accountNumber);
-		} else {
-			account = new CheckingAccount(accountNumber);
-		}
+
+		BankAccount account =
+				accountType == AccountType.SAVINGS ? new SavingsAccount(accountNumber) : new CheckingAccount(
+						accountNumber);
+
+		bankAccountDAO.saveAccount(account, client.getIdClient());
 		client.addAccount(account);
+
 		System.out.println("\nAccount opened successfully. Account number: " + account.getAccountNumber());
 		return account;
 	}
 
 	/**
-	 * Generates a unique account number for new bank accounts. This number is randomly
-	 * generated and should ideally be unique.
+	 * Generates a unique account number for new bank accounts.
 	 *
 	 * @return a unique string representing the account number
 	 */
 	private String generateAccountNumber() {
-		return String.valueOf((int) ((Math.random() + 1) * 1000000));
+		return "A" + (System.currentTimeMillis() / 100);
 	}
 
 	/**
@@ -117,29 +102,18 @@ public class BankService {
 		if (amount <= 0) {
 			throw new IllegalArgumentException("Deposit amount must be greater than 0.");
 		}
-		BankAccount account = findAccount(accountNumber);
-		if (account != null) {
-			System.out.print("\nOperation to deposit started... ");
-			account.deposit(amount);
+		BankAccount account = bankAccountDAO.findAccount(accountNumber);
+		if (account == null) {
+			throw new RuntimeException("Account not found.");
 		}
+
+		bankAccountDAO.updateBalance(account);
+		System.out.print("\nOperation to deposit started... ");
+		bankAccountDAO.deposit(accountNumber, amount);
+		account.deposit(amount);
+		System.out.println("\nDeposit successful. New balance: $" + account.getBalance());
 	}
 
-	/**
-	 * Finds an account by account number, searching through all clients' accounts.
-	 *
-	 * @param accountNumber the account number to search for
-	 * @return the bank account if found, or null if no matching account exists
-	 */
-	private BankAccount findAccount(String accountNumber) {
-		for (Client client : clients.values()) {
-			for (BankAccount account : client.getAccounts()) {
-				if (account.getAccountNumber().equals(accountNumber)) {
-					return account;
-				}
-			}
-		}
-		return null;
-	}
 
 	/**
 	 * Withdraws a specified amount from the given account.
@@ -152,24 +126,38 @@ public class BankService {
 		if (amount <= 0) {
 			throw new IllegalArgumentException("Withdraw amount must be greater than 0.");
 		}
-		BankAccount account = findAccount(accountNumber);
-		if (account != null) {
+		BankAccount account = bankAccountDAO.findAccount(accountNumber);
+		if (account == null) {
+			throw new RuntimeException("Account not found.");
+		}
+		bankAccountDAO.updateBalance(account);
+		if (account.getAccountType() == AccountType.SAVINGS && (account.getBalance() - amount >= 0)) {
 			System.out.print("\nOperation to withdraw started... ");
+			bankAccountDAO.withdraw(accountNumber, amount);
 			account.withdraw(amount);
+			System.out.println("\nWithdraw successful. New balance: $" + account.getBalance());
+		} else if (account.getAccountType() == AccountType.CHECKING && (account.getBalance() - amount >= -500)) {
+			System.out.print("\nOperation to withdraw started... ");
+			bankAccountDAO.withdraw(accountNumber, amount);
+			account.withdraw(amount);
+			System.out.println("\nWithdraw successful. New balance: $" + account.getBalance());
+		} else {
+			throw new RuntimeException("\nAccount limit exceeded. Operation cancelled.");
 		}
 	}
 
 	/**
-	 * Checks and displays the balance of the specified account.
+	 * Checks and returns the balance of the specified account.
 	 *
 	 * @param accountNumber the account number of the account to check balance for
 	 */
-	public void checkBalance(String accountNumber) {
-		BankAccount account = findAccount(accountNumber);
-		if (account != null) {
-			System.out.println(account);
-		} else {
-			System.out.println("Account not found.");
+	public double checkBalance(String accountNumber) {
+		BankAccount account = bankAccountDAO.findAccount(accountNumber);
+		if (account == null) {
+			throw new RuntimeException("Account not found.");
 		}
+
+		double balance = bankAccountDAO.checkBalance(accountNumber);
+		return balance;
 	}
 }

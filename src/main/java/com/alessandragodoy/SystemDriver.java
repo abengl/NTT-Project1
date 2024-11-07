@@ -1,8 +1,8 @@
 package com.alessandragodoy;
 
-import com.alessandragodoy.models.AccountType;
-import com.alessandragodoy.models.BankAccount;
-import com.alessandragodoy.services.BankService;
+import com.alessandragodoy.model.AccountType;
+import com.alessandragodoy.model.BankAccount;
+import com.alessandragodoy.service.BankService;
 
 /**
  * A test driver for the banking system. This class demonstrates various operations
@@ -17,24 +17,22 @@ public class SystemDriver {
 		BankService bankService = new BankService();
 
 		// Register a new client
-		bankService.registerClient("Alessandra", "Godoy", "12345678", "agodoy@mail.com");
+		//bankService.registerClient("Eli", "Smith", "15935785", "eli.smith@mail.com");
 
-		// Uncomment to test handling of null values (will throw an exception)
-		// bankService.registerClient("John", "Doe", null, null);
+		// Open savings accounts for the registered client and performing operations
+		//BankAccount account1 = bankService.openAccount("15935785", AccountType.SAVINGS);
+		String accountNumber1 = "A17309976517";
+		//bankService.deposit(accountNumber1, 200); // ok
+		//bankService.withdraw(accountNumber1, 200); // ok
+		//bankService.withdraw(accountNumber1, 400); // error
+		bankService.checkBalance(accountNumber1);
 
-		// Open checking and savings accounts for the registered client
-		BankAccount account1 = bankService.openAccount("12345678", AccountType.CHECKING);
-		BankAccount account2 = bankService.openAccount("12345678", AccountType.SAVINGS);
-
-		// Perform deposit and withdrawal operations
-		bankService.deposit(account2.getAccountNumber(), 200); // ok
-		bankService.withdraw(account1.getAccountNumber(), 500); // ok
-		bankService.withdraw(account2.getAccountNumber(), 200); // ok
-		bankService.withdraw(account1.getAccountNumber(), 1000); // error
-		bankService.withdraw(account2.getAccountNumber(), 1000); // error
-
-		// Check balances of both accounts
-		bankService.checkBalance(account1.getAccountNumber());
-		bankService.checkBalance(account2.getAccountNumber());
+		// Open checking accounts for the registered client and performing operations
+		//BankAccount account2 = bankService.openAccount("15935785", AccountType.CHECKING);
+		String accountNumber2 = "A17309989520";
+		//bankService.withdraw(accountNumber2, 500); // ok
+		//bankService.withdraw(accountNumber2, 1000); // error
+		//bankService.deposit(accountNumber2, 1000); // ok
+		bankService.checkBalance(accountNumber2);
 	}
 }
